@@ -1,0 +1,405 @@
+---
+title: "HW2"
+subtitle: "ECON 21130"
+author: "Raymond Han"
+date: "1/30/17"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+header-includes: \usepackage{physics} \usepackage{bbm}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(doBy)
+```
+
+*This homework builds on what we studied in class. We are going to simulate from the very simple model of labor supply we considered.*
+
+*The agent problem is*
+
+$$
+\max_{c,h,e} c - \beta \frac{h^{1+\gamma}}{1+\gamma}\\
+\text{s.t. } c = e \cdot \rho \cdot w\cdot h +(1-e)\cdot r \cdot  h
+$$
+*The individual takes his wage $w$ as given, he chooses hours of work $h$ and consumption $c$. He also chooses whether to work in the labor force or to work at home where he has an equivalent wage $r$.*
+
+<span class="label label-success">Question 1</span> *Do we expect to see any income effect given our model? What if we substituted $c$ in the utility for $\frac{c^{1+\eta}}{1+\eta}$?*
+
+***
+
+In equilibrium, we should have that $\frac{MU_l}{MU_c}=\rho w$ (given that the agent chooses to work in the labor force), where $l=l_0-h$ denotes leisure. In our model the marginal utility of consumption is constant, so given an increase in income, the marginal utility of leisure ($-\beta(l_0-l^*)^\gamma$) is likewise unchanged. This implies that $l^*$ is unaffected by the agent's income level so that there is no income effect in our model.
+
+If we substitute $c$ in the utility for $\frac{c^{1+\eta}}{1+\eta}$, the marginal utility of consumption is now a function of income so that the marginal utility of leisure is also now a function of income ($=c$) given by $MU_l=-\beta(l_0-l^*)^\gamma=c^\eta \rho w$. We see that an income effect arises in this case; given an increase in income, leisure $l^*$ also increases.
+
+***
+
+## Simulating Data
+
+*We are going to simulate a data set where agents will choose participation as well as the number of hours if they decide to work. This requires for us to specify how each of the individual specific variables are drawn. We then set the following:*
+
+$$
+\begin{align*}
+\log W_i     &= \eta X_i + Z_i + u_i  \\
+\log R_i     &= \delta_0 + \log(W_i) + \delta Z_i + \xi_i \\
+\log \beta_i &= \nu X_i +\epsilon_i +  a \xi_i   \\
+\end{align*}
+$$
+
+*and finally $(X_i,Z_i,\epsilon_i,u_i,\xi_i)$ are independent normal draws. Given all of this we can simulate our data. *
+
+<span class="label label-success">Question 2</span> *What does the $a$ parameter capture here?*
+
+***
+ 
+The $a$ parameter captures the correlation between $\log R_i$ and $\log \beta_i$. Indeed,
+$$
+\begin{align*}
+  Cov(\log R_i,log \beta_i) &= Cov(\delta_0 + \log W_i +\delta Z_i +\xi_i, \nu X_i+\epsilon_i +a \xi_i) \\
+	&=a Cov(\xi,\xi) \\
+	&=a.
+\end{align*}
+$$
+
+***
+
+```{r, results='hide'}
+p  = list(gamma = 0.8,beta=1,a=1,rho=1,eta=0.2,delta=-0.2,delta0=-0.1,nu=0.5) # parameters
+N=10000  # size of the simulation
+simdata = data.table(i=1:N,X=rnorm(N))
+
+# simulating variables
+simdata[,X := rnorm(N)]
+simdata[,Z := rnorm(N)]
+simdata[,u := rnorm(N)]
+simdata[,lw := p$eta*X  + Z + 0.2*u ]  # log wage
+
+simdata[,xi := rnorm(N)*0.2]
+simdata[,lr := lw + p$delta0+ p$delta*Z + xi]; # log home productivity
+
+simdata[,eps:=rnorm(N)*0.2]
+simdata[,beta := exp(p$nu*X  + p$a*xi + eps)]; # heterogenous beta coefficient
+
+# compute decision variables
+simdata[, lfp := log(p$rho) + lw >= lr] # labor force participation
+simdata[, h   := (p$rho * exp(lw)/beta)^(1/p$gamma)] # hours
+simdata[lfp==FALSE,h:=NA][lfp==FALSE,lw:=NA]
+simdata[,mean(lfp)]
+```
+
+*We have now our simulated data.*
+
+<span class="label label-success">Question 3</span> *Simulate data with $a=0$ and $a=1$. Comment on the value of the coefficient of the regression of log hours on log wage and X.*
+
+***
+```{r}
+#a=1
+simdata[,lh:=log(h)] #log hours
+lm(lh ~ lw + X, data=simdata) #regress
+
+#a=0
+p$a=0
+N=10000  # size of the simulation
+simdata = data.table(i=1:N,X=rnorm(N))
+
+# simulating variables
+simdata[,X := rnorm(N)]
+simdata[,Z := rnorm(N)]
+simdata[,u := rnorm(N)]
+simdata[,lw := p$eta*X  + Z + 0.2*u ]  # log wage
+
+simdata[,xi := rnorm(N)*0.2]
+simdata[,lr := lw + p$delta0+ p$delta*Z + xi]; # log home productivity
+
+simdata[,eps:=rnorm(N)*0.2]
+simdata[,beta := exp(p$nu*X  + p$a*xi + eps)]; # heterogenous beta coefficient
+
+# compute decision variables
+simdata[, lfp := log(p$rho) + lw >= lr] # labor force participation
+simdata[, h   := (p$rho * exp(lw)/beta)^(1/p$gamma)] # hours
+simdata[lfp==FALSE,h:=NA][lfp==FALSE,lw:=NA]
+
+simdata[,lh:=log(h)] #log hours
+lm(lh ~ lw + X, data=simdata) #regress
+
+```
+Hours are determined by the function
+$$
+  h_i=\left(\frac{\rho w_i}{\beta_i}\right)^\frac{1}{\gamma}.
+$$
+which yields the following expression in logs
+$$
+\begin{align*}
+  \log h_i &= \frac{1}{\gamma}\log \rho +\frac{1}{\gamma}\log w_i -\frac{1}{\gamma}\log \beta_i \\
+ & =\frac{1}{\gamma}\log \rho +\frac{1}{\gamma}\log w_i -\frac{\nu}{\gamma} X_i-\frac{1}{\gamma} \epsilon_i -\frac{a}{\gamma} \xi_i.
+\end{align*}
+$$
+
+The coefficient on wages ought to give us the wage elasticity of supply $1/\gamma=1.25$. The elasticity is $\approx 1.25$ when $a=0$ and $\approx 1.17$ when $a=1$ so we see that only when non-labor income $r_i$ and $\beta_i$ are uncorrelated do we recover an unbiased estimate of the Marshallian elasticity from the regression.
+
+***
+
+## Heckman correction
+
+*As we have seen in class, Heckman (74) offers a way for us to correct our regression in order to recover our structural parameters.* 
+
+*As we have seen in class, we need to understand how the error term in the hour regression correlates with the labor participation decision.*
+
+<span class="label label-success">Question 4</span> *Following what we did in class, and using the class note, derive the expression for the Heckman correction term as a function of known parameters. In other words, derive $E( a \xi_i + \epsilon_i | lfp=1)$.*
+
+***
+
+We calculate the Heckman correction term,
+$$
+\begin{align*}
+  E( a \xi_i + \epsilon_i |w_i,X_i,lfp=1) &= E( a \xi_i + \epsilon_i | lfp=1) \\
+  &=E( a \xi_i + \epsilon_i | \log\rho + \log w_i \ge \log r_i) \\
+  &=aE(\xi_i|\log\rho + \log w_i \ge \log r_i)+\underbrace{E(\epsilon_i|\log\rho + \log w_i \ge \log r_i)}_{=0} \\
+  &=aE(\xi_i|\log\rho + \log w_i \ge \delta_0 +\log w_i + \delta Z_i +\xi_i) \\
+  &=aE(\xi_i|\xi_i \le \log \rho-\delta_0 -\delta Z_i) \\
+  &=a\underbrace{(-\sigma_\xi) \left(\frac{\phi(\frac{\log \rho-\delta_0 -\delta Z_i}{\sigma_\xi})}{\Phi(\frac{\log \rho-\delta_0 -\delta Z_i}{\sigma_\xi})}\right)}_{=\lambda_i}
+\end{align*}
+$$
+
+***
+
+*Construction of this expression requires us to recover the parameters $\delta/\sigma_\xi,\delta_0/\sigma_\xi$. We can get these by running a probit of participation on $Z_i$.*
+
+```{r}
+fit2 = glm(lfp ~ Z,simdata,family = binomial(link = "probit"))
+```
+
+<span class="label label-success">Question 5</span> *Check that the regression does recover correctly the coefficients. Use them to construct the inverse Mills ratio. Use the correction you created and show that the regression with this extra term delivers the correct estimates for $\gamma$ even in the case where $a\neq 0$.*
+
+***
+
+We use the labor force participation decision to estimate the underlying parameters. In particular, we have that
+$$
+\begin{align*}
+  e_i &= 1[\log R_i \le \log W_i + \log \rho] \\
+  e_i &= 1[\delta_0+\log W_i +\delta Z_i+\xi_i-\log\rho \le \log W_i] \\
+  e_i&=1[\delta_0 + \delta Z_i-\log\rho \le -\xi_i] \\
+  e_i&=1[-\delta_0 - \delta Z_i +\log \rho \ge \xi_i] \\
+  e_i&=1[-\delta_0 - \delta Z_i +\log \rho \ge \tilde\xi_i \sigma_\xi] \\
+  e_i&=1\left[\frac{-\delta_0+\log\rho}{\sigma_\xi} - \frac{\delta}{\sigma_\xi} Z_i \ge \tilde\xi_i\right]
+\end{align*}
+$$
+where $\tilde\xi_i=\frac{\xi_i}{\sigma_\xi} \sim \mathscr{N}(0,1)$.
+The probit model above yields 
+```{r}
+summary(fit2)
+```
+
+so that $(\frac{-\delta_0+\log\rho}{\sigma_\xi})^{probit}_n=(-\frac{\delta_0}{\sigma_\xi})^{probit}_n$ is given by the intercept and $(-\frac{\delta}{\sigma_\xi})^{probit}_n$ is given by the coefficient on $Z$. We see that the estimated values are pretty close to the underlying values of $\frac{-\delta_0}{\sigma_\xi}=-\frac{-0.1}{0.2}=0.5$ and $-\frac{\delta}{\sigma_\xi}=-\frac{-0.2}{0.2}=1$.
+
+We can now use these estimates to construct the inverse Mills ratio:
+
+```{r}
+simdata[,lambda := -0.2*((dnorm(log(p$rho)/0.2+coef(fit2)[1]+coef(fit2)[2]*simdata[,Z]))/(pnorm(log(p$rho)/0.2+coef(fit2)[1]+coef(fit2)[2]*simdata[,Z])))]
+```
+
+Now we can estimate the following regression model:
+$$
+\begin{align*}
+  \log h_i &=\frac{1}{\gamma}\log \rho +\frac{1}{\gamma}\log w_i -\frac{\nu}{\gamma} X_i-\frac{a}{\gamma} \lambda_i+\mu_i \\
+       &= \frac{1}{\gamma}\log w_i -\frac{\nu}{\gamma} X_i-\frac{a}{\gamma} \lambda_i+\mu_i \\
+  \textrm{with}& \quad E[\mu_i| w_i, X_i, z_i,e_i=1] = 0.
+\end{align*}
+$$
+doing so,
+```{r}
+#a=0
+fit3 <- lm(lh ~ lw + X + lambda, data=simdata) #regress
+gammahat3 <- 1/coef(fit3)["lw"]
+
+#a=1
+p$a=1
+N=10000  # size of the simulation
+simdata = data.table(i=1:N,X=rnorm(N))
+
+# simulating variables
+simdata[,X := rnorm(N)]
+simdata[,Z := rnorm(N)]
+simdata[,u := rnorm(N)]
+simdata[,lw := p$eta*X  + Z + 0.2*u ]  # log wage
+
+simdata[,xi := rnorm(N)*0.2]
+simdata[,lr := lw + p$delta0+ p$delta*Z + xi]; # log home productivity
+
+simdata[,eps:=rnorm(N)*0.2]
+simdata[,beta := exp(p$nu*X  + p$a*xi + eps)]; # heterogenous beta coefficient
+
+# compute decision variables
+simdata[, lfp := log(p$rho) + lw >= lr] # labor force participation
+simdata[, h   := (p$rho * exp(lw)/beta)^(1/p$gamma)] # hours
+simdata[,lh:=log(h)] #log hours
+simdata[lfp==FALSE,h:=NA][lfp==FALSE,lw:=NA]
+
+#probit
+fit2 = glm(lfp ~ Z,simdata,family = binomial(link = "probit"))
+
+#Heckman correction
+simdata[,lambda := -0.2*((dnorm(log(p$rho)/0.2+coef(fit2)[1]+coef(fit2)[2]*simdata[,Z]))/(pnorm(log(p$rho)/0.2+coef(fit2)[1]+coef(fit2)[2]*simdata[,Z])))]
+
+#regression
+fit4 <- lm(lh ~ lw + X + lambda, data=simdata) #regress
+gammahat4 <- 1/coef(fit4)["lw"]
+
+#summarize=
+summary(fit3)
+summary(fit4)
+gammahat3
+gammahat4
+```
+
+We see that for $a=0$ as well as for $a=1$, the regression with the Heckman correction is able to recover the correct estimate for $\gamma$.
+
+***
+
+## Repeated cross-section
+
+
+*Lastly we want to replicate the approach of Blundell, Duncan and Meghir. To justify such an approach we are going to include an additional endogeneity concern between the wage and the disutility of hours of worked. We want to do the following:*
+
+  1. add the wage residual $u_i$ inside the expression for $\beta_i$ (similar to the $\xi$ term)
+  2. simulate 2 data-sets (two different cross-sections, redraw everything). However in the second cross-section change the $rho$ to 1.2
+
+*Our final step is then to try to recover the wage elasticity by differencing across periods using the tax variation. To do so, we need to compute time specific Mills ratios.*
+
+<span class="label label-success">Question 6</span> *Why do we need to estimate the parameters of the selection equation separately for each period?*
+
+***
+
+We now have:
+$$
+\begin{align*}
+\log W_i     &= \eta X_i + Z_i + u_i  \\
+\log R_i     &= \delta_0 + \log(W_i) + \delta Z_i + \xi_i \\
+\log \beta_i &= \nu X_i +\epsilon_i + u_i +  a \xi_i   \\
+\end{align*}
+$$
+Simulating cross-sections for each period:
+
+```{r, results='hide'}
+# PERIOD 1
+p1  = list(gamma = 0.8,beta=1,a=1,rho=1,eta=0.2,delta=-0.2,delta0=-0.1,nu=0.5) # parameters
+N=100000  # size of the simulation
+simdata1 = data.table(i=1:N,X=rnorm(N))
+
+# simulating variables
+simdata1[,X := rnorm(N)]
+simdata1[,Z := rnorm(N)]
+simdata1[,u := rnorm(N)]
+simdata1[,lw := p1$eta*X  + Z + 0.2*u ]  # log wage
+
+simdata1[,xi := rnorm(N)*0.2]
+simdata1[,lr := lw + p1$delta0+ p1$delta*Z + xi]; # log home productivity
+
+simdata1[,eps:=rnorm(N)*0.2]
+simdata1[,beta := exp(p1$nu*X  + p1$a*xi + 0.2*u + eps)]; # heterogenous beta coefficient
+
+# compute decision variables
+simdata1[, lfp := log(p1$rho) + lw >= lr] # labor force participation
+simdata1[, h   := (p1$rho * exp(lw)/beta)^(1/p1$gamma)] # hours
+simdata1[lfp==FALSE,h:=NA][lfp==FALSE,lw:=NA]
+simdata1[,lh:=log(h)] #log hours
+
+# PERIOD 2
+p2  = list(gamma = 0.8,beta=1,a=1,rho=1.2,eta=0.2,delta=-0.2,delta0=-0.1,nu=0.5) # parameters
+N=100000  # size of the simulation
+simdata2 = data.table(i=1:N,X=rnorm(N))
+
+# simulating variables
+simdata2[,X := rnorm(N)]
+simdata2[,Z := rnorm(N)]
+simdata2[,u := rnorm(N)]
+simdata2[,lw := p2$eta*X  + Z + 0.2*u ]  # log wage
+
+simdata2[,xi := rnorm(N)*0.2]
+simdata2[,lr := lw + p2$delta0+ p2$delta*Z + xi]; # log home productivity
+
+simdata2[,eps:=rnorm(N)*0.2]
+simdata2[,beta := exp(p2$nu*X  + p2$a*xi + 0.2*u + eps)]; # heterogenous beta coefficient
+
+# compute decision variables
+simdata2[, lfp := log(p2$rho) + lw >= lr] # labor force participation
+simdata2[, h   := (p2$rho * exp(lw)/beta)^(1/p2$gamma)] # hours
+simdata2[lfp==FALSE,h:=NA][lfp==FALSE,lw:=NA]
+simdata2[,lh:=log(h)] #log hours
+```
+
+We have to estimate the selection equation separately for each period since the tax rate $\rho$ has changed, affecting the agent's participation decision and our resulting probit model. In particular, we will have to subtract $\frac{\log\rho}{\sigma_\xi}$ from the intercept to recover $-\frac{\delta_0}{\sigma_\xi}$ when $\rho=1.2$ (this term $=0$ when $\rho=1$. Estimating the selection equations:
+
+```{r}
+  selection1 = glm(lfp ~ Z,simdata1,family = binomial(link = "probit"))
+  selection2 = glm(lfp ~ Z,simdata2,family = binomial(link = "probit"))
+  summary(selection1)
+  summary(selection2)
+```
+
+***
+
+<span class="label label-success">Question 7</span> *Create the heckman correction term for each observation in each period. Then cut the X into a few values (picking some threshold). Finally compute all first difference in the time dimension (including the mills ratio difference). Finally run the regression using the different group as obervations and the difference as variables. Do this allow to recover the correct $\gamma$?*
+
+***
+The Heckman correction is given as before by:
+$$
+\begin{align*}
+  E( a \xi_i + u_i +\epsilon_i |w_i,X_i,lfp=1) &= E( a \xi_i +u_i+ \epsilon_i | lfp=1) \\
+  &=E( a \xi_i + u_i + \epsilon_i | \log\rho + \log w_i \ge \log r_i) \\
+  &=aE(\xi_i|\log\rho + \log w_i \ge \log r_i)+E(u_i|\log\rho + \log w_i \ge \log r_i)+\underbrace{E(\epsilon_i|\log\rho + \log w_i \ge \log r_i)}_{=0} \\
+  &=aE(\xi_i|\log\rho + \log w_i \ge \delta_0 +\log w_i + \delta Z_i +\xi_i)+E(u_i|\log\rho + \log w_i \ge \delta_0 +\log w_i + \delta Z_i +\xi_i) \\
+  &=aE(\xi_i|\xi_i \le \log \rho-\delta_0 -\delta Z_i)+\underbrace{E(u_i|\xi_i \le \log \rho-\delta_0 -\delta Z_i)}_{=0} \\
+  &=a\underbrace{(-\sigma_\xi) \left(\frac{\phi(\frac{\log \rho-\delta_0 -\delta Z_i}{\sigma_\xi})}{\Phi(\frac{\log \rho-\delta_0 -\delta Z_i}{\sigma_\xi})}\right)}_{=\lambda_i}
+\end{align*}
+$$
+Calculating the correction for each observation in each period:
+
+```{r}
+simdata1[,lambda := -0.2*((dnorm(coef(selection1)[1]+coef(selection1)[2]*Z))/pnorm(coef(selection1)[1]+coef(selection1)[2]*Z))]
+simdata2[,lambda := -0.2*((dnorm(coef(selection2)[1]+coef(selection2)[2]*Z))/pnorm(coef(selection2)[1]+coef(selection2)[2]*Z))]
+```
+
+Following the approach of Blundell, Duncan and Meghir, we cut $X$ into 50 (equal) groups based on quantile categories in each period (the first group consisting of all observation with $X$ in the 0-5% quantile range, the second group consisting of all $X$ in the 5-10% quantile range, etc.)
+
+```{r}
+simdata1[,group := cut(X,breaks=quantile(X, probs=seq(0,1, by=0.02), na.rm=TRUE),include.lowest=TRUE,labels=FALSE)]
+simdata2[,group := cut(X,breaks=quantile(X, probs=seq(0,1, by=0.02), na.rm=TRUE),include.lowest=TRUE,labels=FALSE)]
+```
+
+We now collapse our data so that we have one observation per group, with variable values equal to the sample mean of each variable in the group.
+
+```{r, results='hide'}
+groupdata1 <- summaryBy(.~group,data=simdata1, FUN=mean, keep.names=TRUE, order=TRUE, na.rm=TRUE)
+groupdata2 <- summaryBy(.~group,data=simdata2, FUN=mean, keep.names=TRUE, order=TRUE, na.rm=TRUE)
+```
+
+Then, we compute differences in the time dimension:
+
+```{r, results='hide'}
+groupdata = groupdata2 - groupdata1
+```
+
+Finally, we run the regression using the 50 different groups as observations and the differences as variables.
+$$
+\begin{align*}
+  \Delta\log h_g &=\frac{1}{\gamma}\Delta\log \rho +\frac{1}{\gamma}\Delta\log w_g -\frac{\nu}{\gamma}\Delta X_g-\frac{a}{\gamma} \Delta\lambda_g+\mu_g
+\end{align*}
+$$
+
+```{r}
+#regression
+groupfit <- lm(lh ~ lw + X + lambda, data=groupdata) #regress
+gammahat5 <- 1/coef(groupfit)["lw"]
+
+#summarize
+summary(groupfit)
+gammahat5
+```
+
+We see that the estimate is slightly biased.
