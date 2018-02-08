@@ -402,54 +402,97 @@ data &lt;- data[,fp := runif(1)&gt;0.5, statefip]
 fitn = lm(y2 ~ fp+yrseduc + age + I(age^2),data)
 
 htmlreg(fitn,single.row=TRUE,omit.coef=&quot;state&quot;)</code></pre>
-<pre><code>## 
-## &lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot; &quot;http://www.w3.org/TR/html4/loose.dtd&quot;&gt;
-## &lt;table cellspacing=&quot;0&quot; align=&quot;center&quot; style=&quot;border: none;&quot;&gt;
-## &lt;caption align=&quot;bottom&quot; style=&quot;margin-top:0.3em;&quot;&gt;Statistical models&lt;/caption&gt;
-## &lt;tr&gt;
-## &lt;th style=&quot;text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;&quot;&gt;&lt;b&gt;&lt;/b&gt;&lt;/th&gt;
-## &lt;th style=&quot;text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;&quot;&gt;&lt;b&gt;Model 1&lt;/b&gt;&lt;/th&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;(Intercept)&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;-0.44 (0.09)&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;fpTRUE&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;-0.01 (0.01)&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;yrseduc&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;0.10 (0.00)&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;age&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;0.08 (0.00)&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;I(age^2)&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;-0.00 (0.00)&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;border-top: 1px solid black;&quot;&gt;R&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;2&lt;/sup&gt;&lt;/td&gt;
-## &lt;td style=&quot;border-top: 1px solid black;&quot;&gt;0.03&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;Adj. R&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;2&lt;/sup&gt;&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;0.03&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;Num. obs.&lt;/td&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot;&gt;65685&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;border-bottom: 2px solid black;&quot;&gt;RMSE&lt;/td&gt;
-## &lt;td style=&quot;border-bottom: 2px solid black;&quot;&gt;1.68&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;tr&gt;
-## &lt;td style=&quot;padding-right: 12px; border: none;&quot; colspan=&quot;3&quot;&gt;&lt;span style=&quot;font-size:0.8em&quot;&gt;&lt;sup style=&quot;vertical-align: 0px;&quot;&gt;***&lt;/sup&gt;p &amp;lt; 0.001, &lt;sup style=&quot;vertical-align: 0px;&quot;&gt;**&lt;/sup&gt;p &amp;lt; 0.01, &lt;sup style=&quot;vertical-align: 0px;&quot;&gt;*&lt;/sup&gt;p &amp;lt; 0.05&lt;/span&gt;&lt;/td&gt;
-## &lt;/tr&gt;
-## &lt;/table&gt;</code></pre>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<table cellspacing="0" align="center" style="border: none;">
+<caption align="bottom" style="margin-top:0.3em;">
+Statistical models
+</caption>
+<tr>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b></b>
+</th>
+<th style="text-align: left; border-top: 2px solid black; border-bottom: 1px solid black; padding-right: 12px;">
+<b>Model 1</b>
+</th>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+(Intercept)
+</td>
+<td style="padding-right: 12px; border: none;">
+-0.44 (0.09)<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+fpTRUE
+</td>
+<td style="padding-right: 12px; border: none;">
+-0.01 (0.01)
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+yrseduc
+</td>
+<td style="padding-right: 12px; border: none;">
+0.10 (0.00)<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+age
+</td>
+<td style="padding-right: 12px; border: none;">
+0.08 (0.00)<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+I(age^2)
+</td>
+<td style="padding-right: 12px; border: none;">
+-0.00 (0.00)<sup style="vertical-align: 0px;">***</sup>
+</td>
+</tr>
+<tr>
+<td style="border-top: 1px solid black;">
+R<sup style="vertical-align: 0px;">2</sup>
+</td>
+<td style="border-top: 1px solid black;">
+0.03
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+Adj. R<sup style="vertical-align: 0px;">2</sup>
+</td>
+<td style="padding-right: 12px; border: none;">
+0.03
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;">
+Num. obs.
+</td>
+<td style="padding-right: 12px; border: none;">
+65685
+</td>
+</tr>
+<tr>
+<td style="border-bottom: 2px solid black;">
+RMSE
+</td>
+<td style="border-bottom: 2px solid black;">
+1.68
+</td>
+</tr>
+<tr>
+<td style="padding-right: 12px; border: none;" colspan="3">
+<span style="font-size:0.8em"><sup style="vertical-align: 0px;"><em><strong></sup>p &lt; 0.001, <sup style="vertical-align: 0px;"></strong></sup>p &lt; 0.01, <sup style="vertical-align: 0px;"></em></sup>p &lt; 0.05</span>
+</td>
+</tr>
+</table>
 <p><span class="label label-success">Question 5</span> Explain the expression that starts with `data[, res_hat:={…’.</p>
 <p>We add a column `res_hat’ to our data.frame data. In each state, we draw the value of the first individual from a standard normal distribution For each individual that follows, we give them the value <span class="math inline">\(r[i]=rho*r[i-1]+x\)</span> where <span class="math inline">\(r[i-1]\)</span> is the value given to the individual before them and <span class="math inline">\(rho\)</span> is the “weight” of this correlation. <span class="math inline">\(x\)</span> is drawn from a normal distribution and adds noise to the auto-regressive process.</p>
 <p><span class="label label-success">Question 6</span> For <span class="math inline">\(\rho = 0.7, 0.8, 0.9\)</span>, run 500 replications and report the proportion at each value of replication for which the coefficient on our fictitious policy was significant at 5%.</p>
@@ -508,7 +551,7 @@ print(paste0('.05 quantile: ', quantile(coefs4, .05)))</code></pre>
 <pre><code>## [1] &quot;.05 quantile: -0.216293460079473&quot;</code></pre>
 <pre class="r"><code>print(paste0('.95 quantile: ', quantile(coefs4, .95)))</code></pre>
 <pre><code>## [1] &quot;.95 quantile: -0.0618265051529247&quot;</code></pre>
-<p>We see that 0 is indeed included in the 10% testing interval so we do not reject that the fictitious policy has no effect which is as desired.</p>
+<p>We see that 0 is not included in the 10% testing interval.</p>
 </div>
 
 
