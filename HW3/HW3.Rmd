@@ -1,0 +1,220 @@
+---
+title: "HW3"
+subtitle: "ECON 21130"
+author: "Raymond Han"
+date: "2/7/17"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(doBy)
+```
+
+```{r load, message=FALSE}
+require(kableExtra)
+require(ggplot2)
+require(texreg)
+require(readstata13) #to install, run install.packages("readstata13")
+require(sandwich)
+require(lmtest)
+require(dplyr)
+options(knitr.table.format = "html") 
+```
+
+Loading the CPS data into R:
+```{r}
+# replace this with the path to your download folder
+data = read.dta13("~/Downloads/files to share/CPS_2012_micro.dta") 
+data = data.table(data)
+data$age = as.numeric(data$age)
+```
+
+Now we generate a fictitious policy randomly assigned at the state x gender level. Running the regression:
+
+```{r, results = 'asis'}
+set.seed(60356548)
+data <- data[,fp := runif(1)>0.5, statefip]
+fit1 = lm(lnwage ~fp,data)
+htmlreg(fit1,single.row=TRUE, doctype=FALSE)
+```
+
+This is surprising since we assigned the policy randomly across states and we should have that the coefficient on `fp' should be 0. We generate our own data to find out what is happening. 
+
+#IID Errors
+
+We set up an IID data generating process, run the regression and check significance. 
+
+1. compute the variance of 'lnwage' in the sample. This is an estimate of our homoskedastic error.
+
+```{r}
+var_est = var(data[,lnwage])
+print(var_est)
+```
+
+2. simulate a fictitious outcome 'y2' by adding to 'fp' a normal error with the estimated variance, and truly independent across individuals. Use 'y2:=rnorm(.N)*var_est' inside your data.table data.
+
+3. regress this outcome 'y2' on 'fp', our fictitious policy and collect the coefficient, also save if the coefficient is significant at 5%
+
+4. run steps (2,3) 500 times.
+
+<span class="label label-success">Question 3</span> Follow the previous steps and report the rejection rate of the test on `fp'. You should find something close to 5% and you should feel better!
+
+```{r}
+coefs = data.table(i=1:500)
+for (i in 1:500){
+data <- data[,y2 := rnorm(.N)*var_est]
+fit = lm(y2 ~fp,data)
+coefs[i,coef := coef(fit)[2]]
+coefs[i,sig:= summary(fit)$coef[2,4]<=0.05]
+}
+print(paste0('Rejection rate:', mean(coefs[,sig]), '% '))
+```
+
+Indeed, we see that the coefficient is significant at the 5% level only about 5% of the time.
+
+#Heteroskedastic Errors
+Now we want to compute heteroskedastic robust standard errors which requires us to use some co-variates. We then want to repeat the previous procedure, but we are going to use a different test for the significance. We then want to construct our variance co-variance matrix using the following formula:
+$$
+  V=(X'X)^{-1}X'\Omega X' (X'X)^{-1}
+$$
+where $\Omega=diag\{\epsilon_i^2\}$. Using vcovHC with type 'type="const"' and 'type="HC0"' will do that for you!
+
+We want to check this by simulating from a model with heteroskedastic errors. To do so we are going to use linear model for the variance.
+
+1. use the following regression 'lnwage ~ yrseduc + age + I(age^2)' and regress the square of the residual on the same co-variates formula to get an estimate of the heteroskedastic variance.
+
+```{r}
+  fit2 = lm(lnwage ~ yrseduc + age + I(age^2),data)
+  data[,res_squared := resid(fit2)^2]
+  fit3 = lm(res_squared ~ yrseduc + age + I(age^2),data)
+```
+
+2. predict the value of the square residual for each individual in the data and store this as new variable 's'.
+
+```{r}
+  data[,s := predict(fit3)]
+```
+
+3. predict the value of the level and store it in 'pred'.
+
+```{r}
+  data[,pred := predict(fit2)]
+```
+
+4. simulate data by drawing a normal, multiplying it by individual specific variance 's' and adding the 'pred'.
+5. replicate (4) this 500 times, evaluate the significance of fp using vcovHC with type 'type="const"' and 'type="HC0"'.
+
+<span class="label label-success">Question 4</span> Follow the steps and report the rejection rate for each of the variance evaluation.
+
+```{r}
+coefs2 = data.table(i=1:500)
+for (i in 1:500){
+  data[,sim := rnorm(.N)*s+pred]
+  fit4 = lm(sim ~ fp + yrseduc + age + I(age^2), data)
+  coefs2[i,coef := coef(fit4)[2]]
+  sd_const <- sqrt(vcovHC(fit4, type="const")['fpTRUE', 'fpTRUE'])
+  p_const = min(1-pnorm(coef(fit4)[2]/sd_const), pnorm(coef(fit4)[2]/sd_const))*2
+  sd_hc0 <- sqrt(vcovHC(fit4, type="HC0")['fpTRUE', 'fpTRUE'])
+  p_hc0 = min(1-pnorm(coef(fit4)[2]/sd_hc0), pnorm(coef(fit4)[2]/sd_hc0))*2
+  coefs2[i,sig_const := p_const <= 0.05]
+  coefs2[i,sig_hc0 := p_hc0 <= 0.05]
+  }
+print(paste0('Homoskedastic ("const") rejection rate:', mean(coefs2[,sig_const]), '% '))
+print(paste0('Heteroskedastic ("HC0") rejection rate:', mean(coefs2[,sig_hc0]), '% '))
+```
+
+
+# State Clustered Errors
+
+We are again here going to try to simulate correlated error within state. For this we pick a correlation parameter $\rho$. Then, to simulate we are going to draw the first individual in an iid way, then using an auto-regressive structure to compute the error of the following people. Given $\rho$ it can be done in the following way:
+
+```{r, results='asis'}
+fit0  = lm(lnwage ~ yrseduc + age + I(age^2),data)
+data <- data[,yhat := predict(fit0)]
+rho = 0.8
+data <- data[, res_hat := {
+  r = rep(0,.N)
+  r[1] = rnorm(1)
+  for (i in 2:.N) {
+    r[i] = rho*r[i-1] + rnorm(1)
+  }
+  r
+},statefip]
+data <- data[,y2:= yhat + res_hat]
+data <- data[,fp := runif(1)>0.5, statefip]
+fitn = lm(y2 ~ fp+yrseduc + age + I(age^2),data)
+
+htmlreg(fitn,single.row=TRUE,omit.coef="state")
+```
+
+<span class="label label-success">Question 5</span> Explain the expression that starts with `data[, res_hat:={...'.
+
+We add a column `res_hat' to our data.frame data. In each state, we draw the value of the first individual from a standard normal distribution For each individual that follows, we give them the value $r[i]=rho*r[i-1]+x$ where $r[i-1]$ is the value given to the individual before them and $rho$ is the "weight" of this correlation. $x$ is drawn from a normal distribution and adds noise to the auto-regressive process.
+
+<span class="label label-success">Question 6</span> For $\rho = 0.7, 0.8, 0.9$, run 500 replications and report the proportion at each value of replication for which the coefficient on our fictitious policy was significant at 5%.
+```{r}
+coefs3 = data.table(i=1:500)
+for(rho in c(0.7, 0.8, 0.9)) {
+  fit0  = lm(lnwage ~ yrseduc + age + I(age^2), data)
+  data <- data[,yhat := predict(fit0)]
+  for(i in 1:500) {
+    data <- data[, res_hat := {
+      r = rep(0,.N)
+      r[1] = rnorm(1)
+      for (i in 2:.N) {
+        r[i] = rho*r[i-1] + rnorm(1)
+      }
+      r
+    },statefip]
+    data <- data[, y2:= yhat + res_hat]
+    data <- data[, fp := runif(1) > 0.5, statefip]
+    fitn = lm(y2 ~ fp + yrseduc + age + I(age^2) ,data)
+    coefs3[i,coef := summary(fitn)$coef[2]]
+    coefs3[i,sig := summary(fitn)$coef[2,4] <= 0.05 ]
+  }
+  print(paste0('rho = ', rho, ': ', mean(coefs3[,sig])*100, '% rejection (at 5% sig.)'))
+}
+```
+
+#State Level Bootstrap
+
+We have not covered this in class yet, but one could instead try to resample the data.
+
+Use the following procedure:
+
+  1. Draw 51 states from the 51 states (at the state level) with replacement
+  2. Create a dataset from the actual data, appending the observations for each of the state.
+when a state appears multiple times, attach the data of that state, but treat these states as different. In other words the names of the states in this synthetic data set should just be 1,2,3,4…51.
+  3. compute the regression on this synthetic data set
+  4. store the resulting regression coeffecient for each repetition, repeat 500 times.
+  
+<span class="label label-success">Question 7</span> Report the 0.05 and 0.095 quantiles for the regression coefficients. This is a test at 10%, does this interval include 0?
+```{r bootstrap}
+coefs4 = numeric(500) 
+for(i in 1:500) {
+  states = as.character(base::sample(data$statefip, size = 51, replace = T))
+  bootstrap = filter(data, statefip == states[1])
+  bootstrap$state_id = 1
+  for(j in 2:length(states)) {
+    temp_dataset = filter(data, statefip == states[j])
+    temp_dataset$state_id = j
+    bootstrap = bind_rows(bootstrap, temp_dataset)
+  }
+  fitn = lm(y2 ~ fp + yrseduc + age + I(age^2) ,bootstrap)
+  coef = fitn$coef[2]
+  coefs4[i] = coef
+}
+
+print(paste0('.05 quantile: ', quantile(coefs4, .05)))
+print(paste0('.95 quantile: ', quantile(coefs4, .95)))
+```
+  
+We see that 0 is indeed included in the 10% testing interval so we do not reject that the fictitious policy has no effect which is as desired.
