@@ -1,0 +1,352 @@
+---
+title: "HW5"
+subtitle: "ECON 21130"
+author: "Raymond Han"
+date: "3/4/17"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(doBy)
+```
+
+```{r load, message=FALSE}
+require(kableExtra)
+require(ggplot2)
+require(texreg)
+require(readstata13) #to install, run install.packages("readstata13")
+require(sandwich)
+require(lmtest)
+require(dplyr)
+options(knitr.table.format = "html") 
+```
+
+#A Simple Model
+The unemployed Worker Bellman equation is given by 
+$$
+  V_u = \max_\lambda b_i - c(\lambda) + \lambda_i \frac{\rho W_i}{(1+r)r}+\frac{1-\lambda_i}{1+r}V_u
+$$
+
+<span class="label label-success">Question 1</span> For fixed $\lambda$, We can write
+$$
+  V_u = b_i - c(\lambda) + \lambda_i \frac{\rho W_i}{(1+r)r}+\frac{1-\lambda_i}{1+r}V_u \\
+  \frac{r+\lambda_i}{1+r}V_u = b_i - c(\lambda) + \lambda_i \frac{\rho W_i}{(1+r)r} \\
+  V_u = \frac{1+r}{r+\lambda_i}\left(b_i - c(\lambda) + \lambda_i \frac{\rho W_i}{(1+r)r}\right)
+$$
+
+Specifying that $c(\lambda)=\frac{a}{\gamma}\lambda^{1+\gamma}$,
+$$
+  V_u = \frac{1+r}{r+\lambda_i}\left(b_i - \frac{a}{\gamma}\lambda_i^{1+\gamma} + \lambda_i \frac{\rho W_i}{(1+r)r}\right).
+$$
+
+<span class="label label-success">Question 2</span> The agent will try to maximize the above. Taking the FOC with respect to $\lambda_i$,
+$$
+  -\frac{1+r}{(r+\lambda_i)^2}\left(b_i - \frac{a}{\gamma}\lambda_i^{1+\gamma} + \lambda_i \frac{\rho W_i}{(1+r)r}\right)+\frac{1+r}{r+\lambda_i}\left(- \frac{a(1+\gamma)}{\gamma}\lambda_i^{\gamma} + \frac{\rho W_i}{(1+r)r}\right)=0 \\
+  -\frac{1}{r+\lambda_i}\left(b_i - \frac{a}{\gamma}\lambda_i^{1+\gamma} + \lambda_i \frac{\rho W_i}{(1+r)r}\right)- \frac{a(1+\gamma)}{\gamma}\lambda_i^{\gamma} + \frac{\rho W_i}{(1+r)r}=0 \\
+  -\frac{b_i}{r+\lambda_i}+ \frac{a}{\gamma}\frac{\lambda_i^{1+\gamma}}{r+\lambda_i} -\frac{\lambda_i}{r+\lambda_i}\frac{\rho W_i}{(1+r)r}- \frac{a(1+\gamma)}{\gamma}\lambda_i^{\gamma}+\frac{\rho W_i}{(1+r)r}=0 \\
+  -b_i+ \frac{a}{\gamma}\lambda_i^{1+\gamma} -\lambda_i\frac{\rho W_i}{(1+r)r}- \frac{a(1+\gamma)(r+\lambda_i)}{\gamma}\lambda_i^{\gamma}+\frac{\rho W_i(r+\lambda_i)}{(1+r)r}=0 \\
+  -b_i+ \frac{a}{\gamma}\lambda_i^{1+\gamma} - \frac{a(1+\gamma)}{\gamma}\lambda_i^{1+\gamma}-\frac{a(1+\gamma)r}{\gamma}+\frac{\rho W_i}{1+r}=0 \\
+$$
+As $r \to 0$, We have
+$$
+  -b_i + \frac{a}{\gamma}\lambda_i^{1+\gamma} - \frac{a(1+\gamma)}{\gamma}\lambda_i^{1+\gamma}+\rho W_i=0 \\
+  -b_i - a\lambda_i^{1+\gamma}+\rho W_i=0 \\
+  \Rightarrow \lim_{r\to 0}\lambda_i^* = \left(\frac{\rho W_i-b_i}{a}\right)^{\frac{1}{1+\gamma}}.
+$$
+
+#Simulating Data
+Drawing the wages from a log normal distribution and calculating $\lambda^*_i$ for each individual,
+```{r}
+p = list(rho=0.9,a = 3, gamma =1.5)
+p$n = 1000
+data = data.table(i=1:p$n, B = 0, W = exp(rnorm(p$n) -3))
+
+# solve for lambda
+data[, Lb := ((p$rho*W - B)/(p$a))^(1/(1+p$gamma))]
+data[, Lb := pmin(Lb,pmax(Lb,0),1)]
+
+data[, D := rexp(p$n, rate = Lb)]
+
+ggplot(data,aes(x=W,y=Lb)) + geom_line() + theme_bw()
+```
+
+#Estimating
+
+<span class="label label-success">Question 3</span>
+The log-likelihood function is given by
+$$
+  \begin{align}
+  l_n(\theta)&=\log(Pr(\{D_i,W_i\}_{i=1}^N|\theta)) \\
+  &= \log(Pr(\{W_i\}_{i=1}^N|\theta)\cdot Pr(\{D_i\}_{i=1}^N|\{W_i\}_{i=1}^N,\theta)) \\
+  &=\log\left(\prod_{i=1}^{N}\frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\cdot \lambda_i^*e^{-\lambda_i^*D_i}\right) \\
+  &=\log\left(\prod_{i=1}^{N}\frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\cdot \left(\frac{\rho W_i-b_i}{a}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a}\right)^{\frac{1}{1+\gamma}}D_i}\right) \\
+  &=\sum_{i=1}^n\log\left(\frac{1}{W_i\sqrt{2\pi\sigma^2}}\right)-\frac{(\log W_i-\mu)^2}{2\sigma^2}+\frac{1}{1+\gamma}\log\left(\frac{\rho W_i-b_i}{a}\right)-\left(\frac{\rho W_i-b_i}{a}\right)^{\frac{1}{1+\gamma}}D_i. \\
+  \end{align}
+$$
+We can drop the first two terms since they do not contain our parameters of interest $a$ and $\gamma$:
+$$
+  l_n(\theta) = \sum_{i=1}^n \frac{1}{1+\gamma}\log\left(\frac{\rho W_i-b_i}{a}\right)-\left(\frac{\rho W_i-b_i}{a}\right)^{\frac{1}{1+\gamma}}D_i.
+$$
+The following function calculates the likelihood given observed wages and unemployment duration according to the equation above:
+```{r}
+lik.homo <- function(Wages,Duration,Benefits,p){
+  likelihood <- sum(1/(1+p$gamma)*log((p$rho*Wages-Benefits)/p$a)-((p$rho*Wages-Benefits)/p$a)^(1/(1+p$gamma))*Duration)
+}
+```
+
+We evaluate over a grid to search for the likelihood maximizing values of $a$ and $\gamma$.
+
+```{r}
+
+a_dim = 50
+g_dim = 50
+likelihood = array(0,dim=c(a_dim,g_dim))
+a_test = seq(1, 5, length.out=a_dim)
+g_test = seq(0.5, 2.5, length.out=g_dim)
+i=1
+j=1
+p$a = a_test[1]
+p$gamma = g_test[1]
+maxlik = lik.homo(data$W,data$D,data$B,p)
+for (a in a_test){
+  p$a = a
+for (gamma in g_test){
+  p$gamma = gamma
+  likelihood[i,j]=lik.homo(data$W,data$D,data$B,p)
+  if (likelihood[i,j]>maxlik){
+    maxlik=likelihood[i,j]
+    astar = a
+    gstar = gamma
+  }
+  j=j+1
+}
+  j=1
+  i=i+1
+}
+print(paste0('ahat = ', astar))
+print(paste0('gammahat = ', gstar))
+```
+We see that the MLE estimates of a and $\gamma$ are close to the true values ($a=3$, $\gamma=1.5$).
+
+<span class="label label-success">Question 4</span> The FOC condition for $a$ is given by
+$$
+  \sum_{i=1}^n-\frac{1}{(1+\gamma)(\rho W_i - b_i)a}+\frac{1}{(1+\gamma)a^2}\left(\frac{\rho W_i - b_i}{a}\right)^{-\frac{\gamma}{1+\gamma}}D_i=0 \\
+  \sum_{i=1}^n-\frac{1}{(1+\gamma)a}\left(\frac{1}{\rho W_i-b_i}\right)^{\frac{1}{1+\gamma}}+\frac{1}{(1+\gamma)a^{\frac{2+\gamma}{1+\gamma}}}D_i=0 \\
+  \sum_{i=1}^n\frac{1}{(1+\gamma)}a^{-\frac{1}{1+\gamma}}D_i=\sum_{i=1}^n\frac{1}{(1+\gamma)}\left(\frac{1}{\rho W_i-b_i}\right)^{\frac{1}{1+\gamma}} \\
+  a = \left\{\frac{1}{\sum_{i=1}^nD_i}\sum_{i=1}^n\left(\frac{1}{\rho W_i-b_i}\right)^{\frac{1}{1+\gamma}}\right\}^{-(1+\gamma)} \\
+  a = \left(\sum_{i=1}^nD_i\right)^{1+\gamma}\left\{\sum_{i=1}^n\left(\frac{1}{\rho W_i-b_i}\right)^{\frac{1}{1+\gamma}}\right\}^{-(1+\gamma)} \quad (= a^{MLE}).
+$$
+
+#Random Effect
+
+Now we assume that the population is divided into three latent groups indexed by $k$, each with their own parameter $a_k$. Simulating the data:
+```{r}
+p = list(rho=0.9,a = c(1,3,5), gamma =1.5, pk=c(0.2,0.5,0.3))
+
+p$n = 10000
+data = data.table(i=1:p$n, B = 0, W = exp(rnorm(p$n) -2))
+
+# draw the latent type
+data[, k := sample.int(3,.N,prob = p$pk,replace=T)]
+
+# solve for lambda
+data[, Lb := ((p$rho*W - B)/(p$a[k]))^(1/(1+p$gamma))]
+data[, Lb := pmin(pmax(Lb,0),1)] # bound it between 0 and 1
+
+data[, D := rexp(p$n, rate = Lb)]
+```
+
+<span class="label label-success">Question 5</span> The likelihood function of our random effect model is given by 
+
+$$
+  \begin{align}
+  L_n(\theta)&=Pr(\{D_i,W_i\}_{i=1}^N|\theta) \\
+  &=\prod_{i=1}^{N}\sum_{k=1}^3 Pr(D_i,W_i,k_i=k|\theta) \\
+  &= \prod_{i=1}^{N}\sum_{k=1}^3p_k\cdot Pr(W_i|\theta,k_i=k)\cdot Pr(D_i|W_i,\theta,k_i=k) \\
+  &=\prod_{i=1}^{N}\sum_{k=1}^3 p_k \frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\cdot \lambda_i^*e^{-\lambda_i^*D_i} \\
+  &=\prod_{i=1}^{N}\sum_{k=1}^3 p_k \frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\cdot \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i} \\
+  &=\prod_{i=1}^{N}\frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\sum_{k=1}^3 p_k \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}
+  \end{align}
+$$
+Taking the log of the likelihood function,
+$$
+\begin{align}
+  l_n(\theta)&=\sum_{i=1}^N\log\left(\frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\sum_{k=1}^3 p_k \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}\right) \\
+  &=\sum_{i=1}^N\log\left(\frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\right) +\log\left(\sum_{k=1}^3 p_k \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}\right)
+\end{align}
+$$
+Since the first term has no dependence on the underlying parameters $\theta$, we drop it:
+$$
+\begin{align}
+l_n(\theta)=\sum_{i=1}^N\log\left(\sum_{k=1}^3 p_k \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}\right)
+\end{align}
+$$
+
+The following function calculates the likelihood given observed wages and unemployment duration according to the equation above:
+```{r}
+lik.random <- function(Wages,Duration,Benefits,p){
+  data[, i_likelihood:= log(sum(p$pk*((p$rho*W-B)/p$a)^(1/(1+p$gamma))*exp(-((p$rho*W-B)/p$a)^(1/(1+p$gamma))*D))), by = i]
+  sum(data$i_likelihood)
+}
+```
+
+We want to estimate $\gamma, a_k$ and $p_k$. To do this, we vary each of the parameters separately:
+```{r}
+dim = 50
+# parameter test values
+testgrid = data.table(gamma=1:dim)
+testgrid[,gamma := seq(0.5, 2.5, length.out=dim)]
+testgrid[,a1 := seq(0.5, 7, length.out=dim)]
+testgrid[,a2 := seq(0.5, 7, length.out=dim)]
+testgrid[,a3 := seq(0.5, 7, length.out=dim)]
+testgrid[,pk1 := seq(0, 0.5, length.out=dim)]
+testgrid[,pk2 := seq(0, 0.8, length.out=dim)]
+
+estimands = names(testgrid)
+
+#reformatting parameter list so we can loop over estimands
+p2 = data.table(rho=0.9, a1=1, a2=3, a3=5, gamma=1.5, pk1=0.2, pk2=0.5, pk3=0.3)
+
+#for storing likelihoods and estimates
+liktable = data.table(i=1:dim)
+estimates = data.table(i=1:1)
+
+for (j in estimands){
+  # list of test parameters
+  pt = p
+  pt2 = p2
+  pt2[,(j)]<- testgrid[1,j, with=FALSE]
+  pt2[,pk3:=1-pk1-pk2]
+  #update original test parameter list
+  pt$gamma = pt2$gamma
+  pt$a[1] = pt2$a1
+  pt$a[2] = pt2$a2
+  pt$a[3] = pt2$a3
+  pt$pk[1] = pt2$pk1
+  pt$pk[2] = pt2$pk2
+  pt$pk[3] = pt2$pk3
+  #initializing column with maximum likelihood estimate
+  estimates[,(j):=testgrid[1,j, with=FALSE]]
+  
+  maxlik = lik.random(data$W,data$D,data$B,pt)
+  for (i in 1:dim){
+    pt2[,(j)]<- testgrid[i,j, with=FALSE]
+    pt2[,pk3:=1-pk1-pk2]
+    #update original test parameter list
+    pt$gamma = pt2$gamma
+    pt$a[1] = pt2$a1
+    pt$a[2] = pt2$a2
+    pt$a[3] = pt2$a3
+    pt$pk[1] = pt2$pk1
+    pt$pk[2] = pt2$pk2
+    pt$pk[3] = pt2$pk3
+    lik = lik.random(data$W,data$D,data$B,pt)
+    liktable[i,(j):=lik]
+    #if likelihood is higher, set new max and update estimate
+    if (lik > maxlik){
+      maxlik = lik
+      estimates[,(j)]<-testgrid[i,j, with=FALSE]
+    }
+  }
+}
+truth = data.table(gamma=1.5, a1=1, a2=3, a3=5, pk1=0.2, pk2=0.5, pk3=0.3)
+
+print(estimates)
+print(truth)
+```
+
+As we can see, the likelihood picks close to the true values.
+
+<span class="label label-success">Question 6</span> Now we implement the EM algorithm. Starting with the true value of $\gamma$, we compute the posterior probability for each individual to be of type $i$ as follows
+$$
+\begin{align}
+  q_i^{(t)}(k)&=Pr[k_i=k|W_i,D_i,\theta^{(t)}] \\
+  &=\frac{Pr[k_i=k,W_i,D_i|\theta^{(t)}]}{\sum_{k'=1}^3Pr[k_i=k',W_i,D_i|\theta^{(t)}]} \\
+  &=\frac{p_{k}\cdot Pr[W_i,D_i|\theta^{(t)},k_i=k]}{\sum_{k'=1}^3p_{k'}\cdot Pr[W_i,D_i|\theta^{(t)},k_i=k']} \\
+  &=\frac{p_{k}\cdot \frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}} \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}}{\sum_{k'=1}^3\left(p_{k'}\cdot \frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}} \left(\frac{\rho W_i-b_i}{a_{k'}}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_{k'}}\right)^{\frac{1}{1+\gamma}}D_i}\right)} \\
+  &=\frac{p_{k}\cdot  \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}}{\sum_{k'=1}^3\left(p_{k'}\cdot \left(\frac{\rho W_i-b_i}{a_{k'}}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_{k'}}\right)^{\frac{1}{1+\gamma}}D_i}\right)} \\
+  &=\frac{p_{k}\cdot  \left(\frac{1}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}}{\sum_{k'=1}^3\left(p_{k'}\cdot \left(\frac{1}{a_{k'}}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_{k'}}\right)^{\frac{1}{1+\gamma}}D_i}\right)}.
+\end{align}
+$$
+
+Given the $q_i^{(t)}(k)$, we then find the values of $\theta^{(t)}$ maximizing the expected likelihood. That is, we solve:
+$$
+\begin{align}
+  \theta^{(t+1)} &= \arg\max_{\theta} \sum_i\sum_k q_i^{(t)}(k)Pr[W_i,D_i,k_i=k|\theta^{(t)}] \\
+  &= \arg\max_{\theta} \sum_i\sum_k q_i^{(t)}(k)\cdot \log\left(p_k \frac{1}{W_i\sqrt{2\pi\sigma^2}}e^{-\frac{(\log W_i-\mu)^2}{2\sigma^2}}\cdot \left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}e^{-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i}\right) \\
+  &= \arg\max_{\theta} \sum_i\sum_k q_i^{(t)}(k) \cdot \left( \log p_k +\frac{1}{1+\gamma}\log \left(\frac{\rho W_i-b_i}{a_k}\right)-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i \right)
+\end{align}
+$$
+We want to find the maximizing values of $p_k$ and $a_k$. Imposing the additional constraint that the $\sum_k p_k = 1$, we write the Lagrangian as:
+$$
+  \mathscr{L}= \sum_i\sum_k \left\{ q_i^{(t)}(k) \cdot \left( \log p_k +\frac{1}{1+\gamma}\log \left(\frac{\rho W_i-b_i}{a_k}\right)-\left(\frac{\rho W_i-b_i}{a_k}\right)^{\frac{1}{1+\gamma}}D_i \right) \right\} - \mu\left(\sum_k p_k-1\right)
+$$
+The FOC's are given by:
+
+$$
+  [p_k]: \frac{\sum_i q_i^{(t)}(k)}{p_k} = \mu \\
+  \sum_i q_i^{(t)}(k) =p_k\mu \\
+  \Rightarrow \sum_k\sum_i q_i^{(t)}(k) =\sum_k p_k\mu \\
+  \sum_k\sum_i q_i^{(t)}(k) = \mu \\
+  \Rightarrow p_k= \frac{\sum_i q_i^{(t)}(k)}{\sum_{k'}\sum_i q_i^{(t)}(k')}\\
+  [a_k]: \sum_iq_i^{(t)}(k) \left( -\frac{1}{(1+\gamma)(\rho W_i-b_i)a_k} + \frac{1}{(1+\gamma)a_k^2}\left(\frac{\rho W_i -b_i}{a_k}\right)^{-\frac{\gamma}{1+\gamma}}D_i\right)=0 \\
+  \sum_iq_i^{(t)}(k) \left( -\frac{1}{(1+\gamma)(\rho W_i-b_i)} + \frac{\left(\rho W_i -b_i\right)^{-\frac{\gamma}{1+\gamma}}D_i}{(1+\gamma)a_k^{\frac{1}{1+\gamma}}}\right)=0 \\
+  a_k^{-\frac{1}{1+\gamma}}\sum_iq_i^{(t)}(k) \left(\rho W_i -b_i\right)^{-\frac{\gamma}{1+\gamma}}D_i =\sum_i \frac{q_i^{(t)}(k)}{\rho W_i-b_i} \\
+  a_k^ =\left(\sum_i \frac{q_i^{(t)}(k)}{\rho W_i-b_i}\right)^{-(1+\gamma)} \cdot \left(\sum_iq_i^{(t)}(k) \left(\rho W_i -b_i\right)^{-\frac{\gamma}{1+\gamma}}D_i\right)^{1+\gamma}
+$$
+
+The following function will perform the EM algorithm:
+```{r}
+em.random <- function(d,p){
+  # E - step
+  for (k in 1:3){
+    qk = paste0("q",k)
+    pk = p$pk[k]
+    ak = p$a[k]
+    d[,(qk):=(pk*(1/ak)^(1/(1+p$gamma))*exp(-((p$rho*W-B)/ak)^(1/(1+p$gamma))*D))/sum(p$pk*(1/p$a)^(1/(1+p$gamma))*exp(-((p$rho*W-B)/p$a)^(1/(1+p$gamma))*D)), by=i]
+  }
+  
+  # M - step
+  for (k in 1:3){
+  qk = paste0("q",k)
+  p$pk[k] = sum(d[,qk, with=FALSE])/sum(d$q1+d$q2+d$q3)
+  p$a[k] = sum(d[,qk, with=FALSE]/(p$rho*d$W-d$B))^(-(1+p$gamma))*sum(d[,qk, with=FALSE] *(p$rho*d$W-d$B)^(-p$gamma/(1+p$gamma))*d$D)^(1+p$gamma)
+  }
+  p
+}
+```
+
+We start with an arbitrary guess (with $\gamma$ fixed at the true value) and iterate 100 times,
+```{r}
+pguess = list(rho=0.9,a = c(1,2,3), gamma =1.5, pk=c(0.3,0.3,0.4))
+for (i in 1:100){
+  pguess = em.random(data,pguess)
+}
+ print(pguess)
+```
+(something is wrong.)
+
+<span class="label label-success">Question 7</span> We can also wrap the EM algorithm over a grid:
+```{r}
+pguess = list(rho=0.9,a = c(1,2,3), gamma =1.5, pk=c(0.3,0.3,0.4))
+for (j in 1:dim){
+  pguess$gamma = testgrid[j,gamma]
+for (i in 1:100){
+  pguess = em.random(data,pguess)
+}
+  #calculate and store likelihood for each gamma
+}
+
+#report gamma with highest likelihood after EM algorithm.
+```
+
+#Fixed Effect
+...
