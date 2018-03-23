@@ -1,0 +1,572 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 2.7 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\sortlist[entry]{nyt/global/}
+  \entry{Benabou2006}{article}{}
+    \name{author}{2}{}{%
+      {{hash=BR}{%
+         family={B{\'{e}}nabou},
+         family_i={B\bibinitperiod},
+         given={Roland},
+         given_i={R\bibinitperiod},
+      }}%
+      {{hash=TJ}{%
+         family={Tirole},
+         family_i={T\bibinitperiod},
+         given={Jean},
+         given_i={J\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{BRTJ1}
+    \strng{fullhash}{BRTJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2006}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \verb{doi}
+    \verb 10.1257/aer.96.5.1652
+    \endverb
+    \field{issn}{0002-8282}
+    \field{number}{5}
+    \field{pages}{1652\bibrangedash 1678}
+    \field{title}{{Incentives and Prosocial Behavior}}
+    \verb{url}
+    \verb http://pubs.aeaweb.org/doi/10.1257/aer.96.5.1652
+    \endverb
+    \field{volume}{96}
+    \verb{file}
+    \verb :Users/Raymond/Library/Application Support/Mendeley Desktop/Downloade
+    \verb d/B{\'{e}}nabou, Tirole - 2006 - Incentives and Prosocial Behavior.pd
+    \verb f:pdf
+    \endverb
+    \field{journaltitle}{American Economic Review}
+    \field{month}{11}
+    \field{year}{2006}
+  \endentry
+
+  \entry{Bertrand2000}{article}{}
+    \name{author}{3}{}{%
+      {{hash=BM}{%
+         family={Bertrand},
+         family_i={B\bibinitperiod},
+         given={Marianne},
+         given_i={M\bibinitperiod},
+      }}%
+      {{hash=LEFP}{%
+         family={Luttmer},
+         family_i={L\bibinitperiod},
+         given={Erzo F.\bibnamedelima P.},
+         given_i={E\bibinitperiod\bibinitdelim F\bibinitperiod\bibinitdelim
+  P\bibinitperiod},
+      }}%
+      {{hash=MS}{%
+         family={Mullainathan},
+         family_i={M\bibinitperiod},
+         given={Sendhil},
+         given_i={S\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Oxford University Press}%
+    }
+    \strng{namehash}{BMLEFPMS1}
+    \strng{fullhash}{BMLEFPMS1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2000}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \verb{doi}
+    \verb 10.1162/003355300554971
+    \endverb
+    \field{issn}{0033-5533}
+    \field{number}{3}
+    \field{pages}{1019\bibrangedash 1055}
+    \field{title}{{Network Effects and Welfare Cultures*}}
+    \verb{url}
+    \verb https://academic.oup.com/qje/article-lookup/doi/10.1162/0033553005549
+    \verb 71
+    \endverb
+    \field{volume}{115}
+    \verb{file}
+    \verb :Users/Raymond/Library/Application Support/Mendeley Desktop/Downloade
+    \verb d/Bertrand, Luttmer, Mullainathan - 2000 - Network Effects and Welfar
+    \verb e Cultures.pdf:pdf
+    \endverb
+    \field{journaltitle}{Quarterly Journal of Economics}
+    \field{month}{08}
+    \field{year}{2000}
+  \endentry
+
+  \entry{Borjas1992}{article}{}
+    \name{author}{1}{}{%
+      {{hash=BGJ}{%
+         family={Borjas},
+         family_i={B\bibinitperiod},
+         given={G.\bibnamedelima J.},
+         given_i={G\bibinitperiod\bibinitdelim J\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Oxford University Press}%
+    }
+    \strng{namehash}{BGJ1}
+    \strng{fullhash}{BGJ1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{1992}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \verb{doi}
+    \verb 10.2307/2118325
+    \endverb
+    \field{issn}{0033-5533}
+    \field{number}{1}
+    \field{pages}{123\bibrangedash 150}
+    \field{title}{{Ethnic Capital and Intergenerational Mobility}}
+    \verb{url}
+    \verb https://academic.oup.com/qje/article-lookup/doi/10.2307/2118325
+    \endverb
+    \field{volume}{107}
+    \verb{file}
+    \verb :Users/Raymond/Library/Application Support/Mendeley Desktop/Downloade
+    \verb d/Borjas - 1992 - Ethnic Capital and Intergenerational Mobility.pdf:p
+    \verb df
+    \endverb
+    \field{journaltitle}{The Quarterly Journal of Economics}
+    \field{month}{02}
+    \field{year}{1992}
+  \endentry
+
+  \entry{Bursztyn2017}{article}{}
+    \name{author}{2}{}{%
+      {{hash=BL}{%
+         family={Bursztyn},
+         family_i={B\bibinitperiod},
+         given={Leonardo},
+         given_i={L\bibinitperiod},
+      }}%
+      {{hash=JR}{%
+         family={Jensen},
+         family_i={J\bibinitperiod},
+         given={Robert},
+         given_i={R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Annual Reviews}%
+    }
+    \keyw{image,norms,social interactions,social pressure}
+    \strng{namehash}{BLJR1}
+    \strng{fullhash}{BLJR1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2017}
+    \field{sortinit}{B}
+    \field{sortinithash}{B}
+    \field{abstract}{%
+    Many people care about how they are perceived by those around them. Several
+  recent field experiments in economics have found that such social image
+  concerns can have powerful effects on a range of behaviors. In this article,
+  we first review this recent literature aimed at identifying social image
+  concerns or social pressure. We then highlight and discuss two important
+  areas that have been comparatively less well explored in this literature:
+  understanding social pressure, including the underlying mechanisms, and
+  whether such pressure can be shaped or influenced.%
+    }
+    \verb{doi}
+    \verb 10.1146/annurev-economics-063016-103625
+    \endverb
+    \field{issn}{1941-1383}
+    \field{number}{1}
+    \field{pages}{131\bibrangedash 153}
+    \field{title}{{Social Image and Economic Behavior in the Field:
+  Identifying, Understanding, and Shaping Social Pressure}}
+    \verb{url}
+    \verb http://www.annualreviews.org/doi/10.1146/annurev-economics-063016-103
+    \verb 625
+    \endverb
+    \field{volume}{9}
+    \field{journaltitle}{Annual Review of Economics}
+    \field{month}{08}
+    \field{year}{2017}
+  \endentry
+
+  \entry{DellaVigna2016}{article}{}
+    \name{author}{4}{}{%
+      {{hash=DS}{%
+         family={DellaVigna},
+         family_i={D\bibinitperiod},
+         given={Stefano},
+         given_i={S\bibinitperiod},
+      }}%
+      {{hash=LJ}{%
+         family={List},
+         family_i={L\bibinitperiod},
+         given={John},
+         given_i={J\bibinitperiod},
+      }}%
+      {{hash=UM}{%
+         family={Ulrike},
+         family_i={U\bibinitperiod},
+         given={Malmendier},
+         given_i={M\bibinitperiod},
+      }}%
+      {{hash=RG}{%
+         family={Rao},
+         family_i={R\bibinitperiod},
+         given={Gautam},
+         given_i={G\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{DS+1}
+    \strng{fullhash}{DSLJUMRG1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2016}
+    \field{sortinit}{D}
+    \field{sortinithash}{D}
+    \field{abstract}{%
+    Why do people vote? We design a field experiment to estimate a model of
+  voting 'because others will ask'. The expectation of being asked motivates
+  turnout if individuals derive pride from telling others that they voted, or
+  feel shame from admitting that they did not vote, provided that lying is
+  costly. In a door-to-door survey about election turnout, we experimentally
+  vary (i) the informational content and use of a flyer pre-announcing the
+  survey, (ii) the duration and payment for the survey, and (iii) the
+  incentives to lie about past voting. The experimental results indicate
+  significant social image concerns. For the 2010 Congressional election, we
+  estimate a value of voting 'to tell others' of about {\$}15, contributing 2
+  percentage points to turnout. Lastly, we evaluate a get-out-the-vote
+  intervention in which we tell potential voters that we will ask if they
+  voted.%
+    }
+    \field{title}{{Voting to Tell Others *}}
+    \verb{url}
+    \verb https://eml.berkeley.edu/{~}sdellavi/wp/turnout16-05-23.pdf
+    \endverb
+    \verb{file}
+    \verb :Users/Raymond/Library/Application Support/Mendeley Desktop/Downloade
+    \verb d/DellaVigna Berkeley et al. - 2016 - Voting to Tell Others(2).pdf:pd
+    \verb f
+    \endverb
+    \field{journaltitle}{NBER Working Paper No. w19832}
+    \field{annotation}{%
+    little evidence of pride in voting (some evidence that winners are
+  prideful), instead, disutility due to not voting%
+    }
+    \field{year}{2016}
+  \endentry
+
+  \entry{Edin2003}{article}{}
+    \name{author}{3}{}{%
+      {{hash=EPA}{%
+         family={Edin},
+         family_i={E\bibinitperiod},
+         given={P.-A.},
+         given_i={P\bibinitperiod-A\bibinitperiod},
+      }}%
+      {{hash=FP}{%
+         family={Fredriksson},
+         family_i={F\bibinitperiod},
+         given={P.},
+         given_i={P\bibinitperiod},
+      }}%
+      {{hash=AO}{%
+         family={Aslund},
+         family_i={A\bibinitperiod},
+         given={O.},
+         given_i={O\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Oxford University Press}%
+    }
+    \strng{namehash}{EPAFPAO1}
+    \strng{fullhash}{EPAFPAO1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2003}
+    \field{sortinit}{E}
+    \field{sortinithash}{E}
+    \verb{doi}
+    \verb 10.1162/00335530360535225
+    \endverb
+    \field{issn}{0033-5533}
+    \field{number}{1}
+    \field{pages}{329\bibrangedash 357}
+    \field{title}{{Ethnic Enclaves and the Economic Success of
+  Immigrants--Evidence from a Natural Experiment}}
+    \verb{url}
+    \verb https://academic.oup.com/qje/article-lookup/doi/10.1162/0033553036053
+    \verb 5225
+    \endverb
+    \field{volume}{118}
+    \verb{file}
+    \verb :Users/Raymond/Library/Application Support/Mendeley Desktop/Downloade
+    \verb d/Edin, Fredriksson, Aslund - 2003 - Ethnic Enclaves and the Economic
+    \verb  Success of Immigrants--Evidence from a Natural Experiment.pdf:pdf
+    \endverb
+    \field{journaltitle}{The Quarterly Journal of Economics}
+    \field{month}{02}
+    \field{year}{2003}
+  \endentry
+
+  \entry{Fafchamps2017}{article}{}
+    \name{author}{3}{}{%
+      {{hash=FM}{%
+         family={Fafchamps},
+         family_i={F\bibinitperiod},
+         given={Marcel},
+         given_i={M\bibinitperiod},
+      }}%
+      {{hash=VA}{%
+         family={Vaz},
+         family_i={V\bibinitperiod},
+         given={Ana},
+         given_i={A\bibinitperiod},
+      }}%
+      {{hash=VPC}{%
+         family={Vicente},
+         family_i={V\bibinitperiod},
+         given={Pedro\bibnamedelima C},
+         given_i={P\bibinitperiod\bibinitdelim C\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{FMVAVPC1}
+    \strng{fullhash}{FMVAVPC1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2017}
+    \field{sortinit}{F}
+    \field{sortinithash}{F}
+    \field{abstract}{%
+    Voter education campaigns often aim to increase voter participation and
+  political account-ability. Randomized interventions were implemented
+  nationwide during the 2009 Mozambi-can elections using lea ets, text
+  messaging, and a free newspaper. We study the local peer e¤ecs triggered by
+  the campaign. We investigate whether treatment e¤ects are transmit-ted
+  through social networks and geographical proximity at the village level. For
+  individuals personally targeted by the campaign, we estimate the
+  reinforcement e¤ect of proximity to other individuals in our sample. For
+  untargeted individuals, we estimate how the campaign di¤uses as a function
+  of proximity to others in the sample. We {\ldots}nd evidence for both
+  e¤ects, similar across treatments and proximity measures. The campaign
+  raises the level of interest We wish to thank Jenny Aker, Oriana Bandiera,
+  C{\'{a}}tia Batista, Paul Collier, Eliana La Ferrara, Ted Miguel, Gerard
+  Padro-i-Miquel, and Imran Rasul for helpful suggestions. Miguel Ferreira
+  provided superb research assis-tance. We also wish to thank participants in
+  seminars at LSE/UCL, Stanford, ULB, and UNU-MERIT, and at the MOVE, SITE,
+  NEUDC, and North-American Winter Meeting of the Econometric Society
+  conferences for useful comments. We are particularly grateful to newspaper
+  @Verdade, AMODE, Observat{\'{o}}rio Eleitoral and STAE for fruitful
+  collaboration. Shenga o¤ered crucial inputs to this project for which we are
+  most thankful. Finally, we would like to extend a word to the fantastic work
+  o¤ered by supervisors Eg{\'{i}}dio Chaimite, Alberto da Cruz, Eg{\'{i}}dio
+  Guambe, and Aqu{\'{i}}lcia Samuel, and the group of enumerators with whom we
+  worked: their dedication to this project was critical to its success. We wish
+  to acknowledge {\ldots}nancial support from the Tel: +351-21-3801601. in the
+  election through networks, in line with the average treatment e¤ect.
+  However, we {\ldots}nd a negative network e¤ect of the treatment on voter
+  participation, implying that the positive e¤ect of treatment on more central
+  individuals is smaller. We interpret this result as consistent with
+  free-riding through pivotal reasoning and we provide additional evidence to
+  support this claim.%
+    }
+    \field{title}{{Voting and Peer Effects: Experimental Evidence from
+  Mozambique}}
+    \verb{url}
+    \verb https://web.stanford.edu/{~}fafchamp/moznet.pdf
+    \endverb
+    \field{journaltitle}{Working Paper}
+    \field{year}{2017}
+  \endentry
+
+  \entry{Gerber2008}{article}{}
+    \name{author}{3}{}{%
+      {{hash=GAS}{%
+         family={Gerber},
+         family_i={G\bibinitperiod},
+         given={Alan\bibnamedelima S},
+         given_i={A\bibinitperiod\bibinitdelim S\bibinitperiod},
+      }}%
+      {{hash=GDP}{%
+         family={Green},
+         family_i={G\bibinitperiod},
+         given={Donald\bibnamedelima P},
+         given_i={D\bibinitperiod\bibinitdelim P\bibinitperiod},
+      }}%
+      {{hash=LCW}{%
+         family={Larimer},
+         family_i={L\bibinitperiod},
+         given={Christopher\bibnamedelima W},
+         given_i={C\bibinitperiod\bibinitdelim W\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{GASGDPLCW1}
+    \strng{fullhash}{GASGDPLCW1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2008}
+    \field{sortinit}{G}
+    \field{sortinithash}{G}
+    \field{abstract}{%
+    Voter turnout theories based on rational self-interested behavior generally
+  fail to predict significant turnout unless they account for the utility that
+  citizens receive from performing their civic duty. We distinguish between two
+  aspects of this type of utility, intrinsic satisfaction from behaving in
+  accordance with a norm and extrinsic incentives to comply, and test the
+  effects of priming intrinsic motives and applying varying degrees of
+  extrinsic pressure. A large-scale field experiment involving several hundred
+  thousand registered voters used a series of mailings to gauge these effects.
+  Substantially higher turnout was observed among those who received mailings
+  promising to publicize their turnout to their household or their neighbors.
+  These findings demonstrate the profound importance of social pressure as an
+  inducement to political participation.%
+    }
+    \verb{doi}
+    \verb 10.1017/S000305540808009X
+    \endverb
+    \field{number}{1}
+    \field{title}{{Social Pressure and Voter Turnout: Evidence from a
+  Large-scale Field Experiment}}
+    \verb{url}
+    \verb https://isps.yale.edu/sites/default/files/publication/2012/12/ISPS08-
+    \verb 001.pdf
+    \endverb
+    \field{volume}{102}
+    \verb{file}
+    \verb :Users/Raymond/Library/Application Support/Mendeley Desktop/Downloade
+    \verb d/Gerber, Green, Larimer - 2008 - Article {\&}quot Social Pressure an
+    \verb d Voter Turnout Evidence from a Large- scale Field Experiment {\&}quo
+    \verb t Soci.pdf:pdf
+    \endverb
+    \field{journaltitle}{American Political Science Review}
+    \field{year}{2008}
+  \endentry
+
+  \entry{Manski1993}{article}{}
+    \name{author}{1}{}{%
+      {{hash=MCF}{%
+         family={Manski},
+         family_i={M\bibinitperiod},
+         given={Charles\bibnamedelima F.},
+         given_i={C\bibinitperiod\bibinitdelim F\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Oxford University Press}%
+    }
+    \strng{namehash}{MCF1}
+    \strng{fullhash}{MCF1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{1993}
+    \field{sortinit}{M}
+    \field{sortinithash}{M}
+    \field{abstract}{%
+    This paper examines the reflection problem that arises when a researcher
+  observing the distribution of behaviour in a population tries to infer
+  whether the average behaviour in some group influences the behaviour of the
+  individuals that comprise the group. It is found that inference is not
+  possible unless the researcher has prior information specifying the
+  composition of reference groups. If this information is available, the
+  prospects for inference depend critically on the population relationship
+  between the variables defining reference groups and those directly affecting
+  outcomes. Inference is difficult to impossible if these variables are
+  functionally dependent or are statistically independent. The prospects are
+  better if the variables defining reference groups and those directly
+  affecting outcomes are moderately related in the population.%
+    }
+    \verb{doi}
+    \verb 10.2307/2298123
+    \endverb
+    \field{issn}{00346527}
+    \field{number}{3}
+    \field{pages}{531}
+    \field{title}{{Identification of Endogenous Social Effects: The Reflection
+  Problem}}
+    \verb{url}
+    \verb https://academic.oup.com/restud/article-lookup/doi/10.2307/2298123
+    \endverb
+    \field{volume}{60}
+    \field{journaltitle}{The Review of Economic Studies}
+    \field{month}{07}
+    \field{year}{1993}
+  \endentry
+
+  \entry{Perez-Truglia2017}{article}{}
+    \name{author}{2}{}{%
+      {{hash=PTR}{%
+         family={Perez-Truglia},
+         family_i={P\bibinitperiod-T\bibinitperiod},
+         given={Ricardo},
+         given_i={R\bibinitperiod},
+      }}%
+      {{hash=CG}{%
+         family={Cruces},
+         family_i={C\bibinitperiod},
+         given={Guillermo},
+         given_i={G\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {University of Chicago PressChicago, IL}%
+    }
+    \strng{namehash}{PTRCG1}
+    \strng{fullhash}{PTRCG1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2017}
+    \field{sortinit}{P}
+    \field{sortinithash}{P}
+    \field{abstract}{%
+    We conducted a field experiment to study social influences on partisan
+  political participation. We sent letters to 92,000 contributors during the
+  2012 presidential election campaign. We randomized features of the letters
+  and measured the effects of these variations on the recipients' subsequent
+  contributions. We find that making an individual's contributions more visible
+  to her neighbors increases the contributions of supporters of the local
+  majority party and decreases those of supporters of the minority party.
+  Individuals contribute more when they perceive higher average contributions
+  from own-party supporters in their area and contribute less if there is a
+  higher share of own-party contributors.%
+    }
+    \verb{doi}
+    \verb 10.1086/692711
+    \endverb
+    \field{issn}{0022-3808}
+    \field{number}{4}
+    \field{pages}{1208\bibrangedash 1243}
+    \field{title}{{Partisan Interactions: Evidence from a Field Experiment in
+  the United States}}
+    \verb{url}
+    \verb http://www.journals.uchicago.edu/doi/10.1086/692711
+    \endverb
+    \field{volume}{125}
+    \verb{file}
+    \verb :Users/Raymond/Downloads/PartisanInteractionsEvidenceFromAF{\_}previe
+    \verb w.pdf:pdf
+    \endverb
+    \field{journaltitle}{Journal of Political Economy}
+    \field{month}{08}
+    \field{year}{2017}
+  \endentry
+\endsortlist
+\endinput
