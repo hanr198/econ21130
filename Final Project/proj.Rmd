@@ -1,0 +1,269 @@
+---
+title: "Project"
+subtitle: "ECON 21130"
+author: "Raymond Han"
+date: "3/22/17"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+library(doBy)
+```
+
+```{r load, message=FALSE}
+require(kableExtra)
+require(ggplot2)
+require(texreg)
+require(readstata13) #to install, run install.packages("readstata13")
+require(sandwich)
+require(lmtest)
+require(dplyr)
+require(poweRlaw)
+options(knitr.table.format = "html") 
+```
+
+# 3.1 Proxying for Political Activism
+```{r, results = 'asis'}
+set.seed(60356549)
+iter=20
+p  = list(phi = 10,theta=1,beta=1, rho=0.95) # parameters
+N=100000  # size of the simulation
+K=50 # number of groups
+J=50 # number of areas
+
+coefs = data.table(i=1:iter)
+for (i in 1:iter){
+
+data = data.table(i=1:N,X=rnorm(N,mean=0,sd=1),eps=rnorm(N,mean=0,sd=1))
+#assign groups (group sizes drawn from an exponential distribution)
+data <- data[,k := ceiling(rexp(.N,rate = .05))]
+data <- data[k>K,k := K]
+#assign areas (area drawn from an exponential distribution, with probability rho next arrival in same group lives in same area)
+data <- data[,j := {
+  r = rep(0,.N)
+  r[1] = ceiling(rexp(1,rate = .05))
+  for (i in 2:.N) {
+    if (runif(1)<p$rho){
+    r[i] = r[i-1]
+    }else{
+    r[i] = ceiling(rexp(1,rate = .05))
+    }
+  }
+  r
+},k]
+data <- data[j>J,j := J]
+
+#assign neighborhood level shocks (normal)
+data <- data[,gamma := rnorm(n=1,mean=0,sd=.2), j]
+#assign group level shocks (normal)
+data <- data[,delta := rnorm(n=1,mean=0,sd=.2), k]
+
+#group latent political activity 
+data <- data[,pi := p$beta*mean(X)+delta, k]
+
+#ethnic concentration
+data <- data[,group_size :=.N , k]
+data <- data[,area_size :=.N , j]
+data <- data[,e :=log((.N/area_size)/(group_size/N)) , by="k,j"]
+data <- data[,epi := e*pi]
+
+#voting decision
+Rmean = mean(p$phi*data[,e]*data[,pi] + p$theta*data[,e] + p$beta*data[,X] + data[,delta] + data[,gamma] + data[,eps])
+data <- data[,Rtilde := p$phi*e*pi + p$theta*e + p$beta*X + delta + gamma + eps]
+data <- data[,R := (p$phi*e*pi + p$theta*e + p$beta*X + delta + gamma + eps)>Rmean]
+
+#national voting rate
+data <- data[,voterate:=mean(R), k]
+
+#OLS fit
+fit = lm(R ~ e:voterate + e + X + factor(j) + factor(k), data)
+coefs <- coefs[i,phi := coef(fit)["e:voterate"]]
+coefs <- coefs[i,theta := coef(fit)["e"]]
+coefs <- coefs[i,beta := coef(fit)["X"]]
+
+#logit fit
+#fit2 = glm(R ~ e:voterate + e + X + factor(j) + factor(k), data ,family = binomial(link = "logit"))
+#summary(fit2)
+}
+print(paste0('phi:', mean(coefs[,phi]), 'sd:', sd(coefs[,phi])))
+print(paste0('theta:', mean(coefs[,theta]), 'sd:', sd(coefs[,theta])))
+print(paste0('beta:', mean(coefs[,beta]), 'sd:', sd(coefs[,beta])))
+```
+
+Note that our estimate of phi is a bit off. We need to correct using the formula $\phi = \frac{\hat\phi}{1-\hat\phi\overline{e}}$.
+```{r}
+phi_adj = mean(coefs[,phi])/(1-mean(coefs[,phi])*mean(data[,e]))
+print(paste0('phi (adjusted):', phi_adj))
+```
+
+
+Now suppose that some ethnic groups are more clustered than others, i.e. they have higher $\rho$. It is especially problematic is $\rho$ is a function of $\pi_k$. That is, if groups which are more politically active are also more (or less) clustered. Simulating this dependency:
+
+```{r, results = 'asis'}
+set.seed(60356549)
+iter=20
+p  = list(phi = 10,theta=1,beta=1, rho=0.95) # parameters
+N=100000  # size of the simulation
+K=50 # number of groups
+J=50 # number of areas
+
+coefs = data.table(i=1:iter)
+for (i in 1:iter){
+
+data = data.table(i=1:N,X=rnorm(N,mean=0,sd=1),eps=rnorm(N,mean=0,sd=1))
+#assign groups (group sizes drawn from an exponential distribution)
+data <- data[,k := ceiling(rexp(.N,rate = .05))]
+data <- data[k>K,k := K]
+#assign group level shocks (normal)
+data <- data[,delta := rnorm(n=1,mean=0,sd=.2), k]
+#group latent political activity 
+data <- data[,pi := p$beta*mean(X)+delta, k]
+
+#generate clustering parameter
+data <- data[,rho_k := .95 + 0.25*pi]
+data <- data[rho_k>0.99, rho_k :=0.99]
+
+#assign areas (area drawn from an exponential distribution, with probability rho next arrival in same group lives in same area)
+data <- data[,j := {
+  r = rep(0,.N)
+  r[1] = ceiling(rexp(1,rate = .05))
+  for (i in 2:.N) {
+    if (runif(1)<mean(rho_k)){
+    r[i] = r[i-1]
+    }else{
+    r[i] = ceiling(rexp(1,rate = .05))
+    }
+  }
+  r
+},k]
+data <- data[j>J,j := J]
+
+#assign neighborhood level shocks (normal)
+data <- data[,gamma := rnorm(n=1,mean=0,sd=.2), j]
+
+
+#ethnic concentration
+data <- data[,group_size :=.N , k]
+data <- data[,area_size :=.N , j]
+data <- data[,e :=log((.N/area_size)/(group_size/N)) , by="k,j"]
+data <- data[,epi := e*pi]
+
+#voting decision
+Rmean = mean(p$phi*data[,e]*data[,pi] + p$theta*data[,e] + p$beta*data[,X] + data[,delta] + data[,gamma] + data[,eps])
+data <- data[,R := (p$phi*e*pi + p$theta*e + p$beta*X + delta + gamma + eps)>Rmean]
+data <- data[,Rtilde := p$phi*e*pi + p$theta*e + p$beta*X + delta + gamma + eps]
+
+#national voting rate
+data <- data[,voterate:=mean(R), k]
+
+#OLS fit
+fit = lm(R ~ e:voterate + e + X + factor(j) + factor(k), data)
+coefs <- coefs[i,phi := coef(fit)["e:voterate"]]
+coefs <- coefs[i,theta := coef(fit)["e"]]
+coefs <- coefs[i,beta := coef(fit)["X"]]
+
+#logit fit
+#fit2 = glm(R ~ e:voterate + e + X + factor(j) + factor(k), data ,family = binomial(link = "logit"))
+#summary(fit2)
+}
+print(paste0('phi:', mean(coefs[,phi]), 'sd:', sd(coefs[,phi])))
+print(paste0('theta:', mean(coefs[,theta]), 'sd:', sd(coefs[,theta])))
+print(paste0('beta:', mean(coefs[,beta]), 'sd:', sd(coefs[,beta])))
+```
+Performing the same correction now yields:
+```{r}
+phi_adj = mean(coefs[,phi])/(1-mean(coefs[,phi])*mean(data[,e]))
+print(paste0('phi (adjusted):', phi_adj))
+```
+
+# 3.2 Differential Selection
+
+```{r, results = 'asis'}
+set.seed(60356549)
+iter=20
+p  = list(phi = 10,theta=1, beta=1, rho=0.95, theta1=2, theta2=1, a = 1) # parameters
+N=10000  # size of the simulation
+K=50 # number of groups
+J=50 # number of areas
+
+coefs = data.table(i=1:iter)
+coefs2 = data.table(i=1:iter)
+for (i in 1:iter){
+
+data = data.table(i=1:N,X=rnorm(N,mean=0,sd=1),eps=rnorm(N,mean=0,sd=1))
+#assign groups (group sizes drawn from an exponential distribution)
+data <- data[,k := ceiling(rexp(.N,rate = .05))]
+data <- data[k>K,k := K]
+#assign areas (area drawn from an exponential distribution, with probability rho next arrival in same group lives in same area)
+data <- data[,j := {
+  r = rep(0,.N)
+  r[1] = ceiling(rexp(1,rate = .05))
+  for (i in 2:.N) {
+    if (runif(1)<p$rho){
+    r[i] = r[i-1]
+    }else{
+    r[i] = ceiling(rexp(1,rate = .05))
+    }
+  }
+  r
+},k]
+data <- data[j>J,j := J]
+
+#assign neighborhood level shocks (normal)
+data <- data[,gamma := rnorm(n=1,mean=0,sd=.2), j]
+#assign group level shocks (normal)
+data <- data[,delta := rnorm(n=1,mean=0,sd=.2), k]
+
+#group latent political activity 
+data <- data[,pi := p$beta*mean(X)+delta, k]
+
+#ethnic concentration
+data <- data[,group_size :=.N , k]
+data <- data[,area_size :=.N , j]
+data <- data[,A := rnorm(.N,mean=0,sd=.5)]
+data <- data[,B := rnorm(.N,mean=0,sd=.5)]
+data <- data[,e :=  p$a*pi*A + B]
+data <- data[,epi := e*pi]
+
+#voting decision
+Rmean = mean(p$phi*data[,e]*data[,pi] + p$theta*data[,e] + p$beta*data[,X] + data[,delta] + data[,gamma] + data[,A] + data[,eps])
+data <- data[,R := (p$phi*e*pi + p$theta*e + p$beta*X + delta + gamma + A + eps)>Rmean]
+data <- data[,Rtilde := p$phi*e*pi + p$theta*e + p$beta*X + delta + gamma + eps]
+data <- data[,Rtilde2 := p$phi*e*pi + p$beta*X + delta + gamma + p$theta1*A + p$theta2*B + eps]
+
+#national voting rate
+data <- data[,voterate:=mean(R), k]
+
+#OLS fit
+#no differential selection
+fit = lm(Rtilde ~ e:pi + e + X + factor(j) + factor(k), data)
+coefs <- coefs[i,phi := coef(fit)["e:pi"]]
+coefs <- coefs[i,theta := coef(fit)["e"]]
+coefs <- coefs[i,beta := coef(fit)["X"]]
+#differential selection
+fit2 = lm(Rtilde2 ~ e:pi + e + X + factor(j) + factor(k), data)
+coefs2 <- coefs2[i,phi := coef(fit2)["e:pi"]]
+coefs2 <- coefs2[i,theta := coef(fit2)["e"]]
+coefs2 <- coefs2[i,beta := coef(fit2)["X"]]
+
+#logit fit
+#fit2 = glm(R ~ e:voterate + e + X + factor(j) + factor(k), data ,family = binomial(link = "logit"))
+#summary(fit2)
+}
+print("No Differential Selection")
+print(paste0('phi:', mean(coefs[,phi]), 'sd:', sd(coefs[,phi])))
+print(paste0('theta:', mean(coefs[,theta]), 'sd:', sd(coefs[,theta])))
+print(paste0('beta:', mean(coefs[,beta]), 'sd:', sd(coefs[,beta])))
+print("Differential Selection")
+print(paste0('phi2:', mean(coefs2[,phi]), 'sd:', sd(coefs2[,phi])))
+print(paste0('theta2:', mean(coefs2[,theta]), 'sd:', sd(coefs2[,theta])))
+print(paste0('beta2:', mean(coefs2[,beta]), 'sd:', sd(coefs2[,beta])))
+```
